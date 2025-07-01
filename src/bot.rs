@@ -229,45 +229,45 @@ impl BotHandler {
 
     /// Игра "Четное/Нечетное"
     async fn play_even_odd_game(bot: &Bot, chat_id: ChatId, choice: EvenOddChoice) -> ResponseResult<()> {
-        let dice_result = DiceGame::roll_dice();
-        let is_win = DiceGame::check_even_odd(dice_result, choice.clone());
-        
         let choice_text = match choice {
             EvenOddChoice::Even => "четное",
             EvenOddChoice::Odd => "нечетное",
         };
 
-        let result_text = if dice_result % 2 == 0 { "четное" } else { "нечетное" };
-        
-        let message = if is_win {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\
-                 Число {}: {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                choice_text,
-                dice_result,
-                result_text,
-                DiceGame::win_message()
-            )
-        } else {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\
-                 Число {}: {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                choice_text,
-                dice_result,
-                result_text,
-                DiceGame::lose_message()
-            )
-        };
+        // Отправляем сообщение о выборе пользователя
+        bot.send_message(chat_id, format!("🎯 Вы выбрали: {}\n🎲 Бросаю кубик...", choice_text))
+            .await?;
 
-        bot.send_message(chat_id, message).await?;
+        // Отправляем анимированный кубик
+        let dice_message = bot.send_dice(chat_id).await?;
+        
+        // Получаем результат кубика
+        if let Some(dice) = dice_message.dice() {
+            let dice_result = dice.value as u8;
+            let is_win = DiceGame::check_even_odd(dice_result, choice.clone());
+            let result_text = if dice_result % 2 == 0 { "четное" } else { "нечетное" };
+            
+            // Даем время для анимации кубика
+            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            
+            let message = if is_win {
+                format!(
+                    "🎉 Число {}: {}\n\n{}",
+                    dice_result,
+                    result_text,
+                    DiceGame::win_message()
+                )
+            } else {
+                format!(
+                    "😔 Число {}: {}\n\n{}",
+                    dice_result,
+                    result_text,
+                    DiceGame::lose_message()
+                )
+            };
+
+            bot.send_message(chat_id, message).await?;
+        }
         
         // Предложение новой игры
         Self::offer_new_game(bot, chat_id).await
@@ -275,45 +275,45 @@ impl BotHandler {
 
     /// Игра "Больше/Меньше 3.5"
     async fn play_high_low_game(bot: &Bot, chat_id: ChatId, choice: HighLowChoice) -> ResponseResult<()> {
-        let dice_result = DiceGame::roll_dice();
-        let is_win = DiceGame::check_high_low(dice_result, choice.clone());
-        
         let choice_text = match choice {
             HighLowChoice::High => "больше 3.5 (4-6)",
             HighLowChoice::Low => "меньше 3.5 (1-3)",
         };
 
-        let result_text = if dice_result >= 4 { "больше 3.5" } else { "меньше 3.5" };
-        
-        let message = if is_win {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\
-                 Число {} - {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                choice_text,
-                dice_result,
-                result_text,
-                DiceGame::win_message()
-            )
-        } else {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\
-                 Число {} - {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                choice_text,
-                dice_result,
-                result_text,
-                DiceGame::lose_message()
-            )
-        };
+        // Отправляем сообщение о выборе пользователя
+        bot.send_message(chat_id, format!("📊 Вы выбрали: {}\n🎲 Бросаю кубик...", choice_text))
+            .await?;
 
-        bot.send_message(chat_id, message).await?;
+        // Отправляем анимированный кубик
+        let dice_message = bot.send_dice(chat_id).await?;
+        
+        // Получаем результат кубика
+        if let Some(dice) = dice_message.dice() {
+            let dice_result = dice.value as u8;
+            let is_win = DiceGame::check_high_low(dice_result, choice.clone());
+            let result_text = if dice_result >= 4 { "больше 3.5" } else { "меньше 3.5" };
+            
+            // Даем время для анимации кубика
+            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            
+            let message = if is_win {
+                format!(
+                    "🎉 Число {} - {}\n\n{}",
+                    dice_result,
+                    result_text,
+                    DiceGame::win_message()
+                )
+            } else {
+                format!(
+                    "😔 Число {} - {}\n\n{}",
+                    dice_result,
+                    result_text,
+                    DiceGame::lose_message()
+                )
+            };
+
+            bot.send_message(chat_id, message).await?;
+        }
         
         // Предложение новой игры
         Self::offer_new_game(bot, chat_id).await
@@ -321,32 +321,38 @@ impl BotHandler {
 
     /// Игра "Точное число"
     async fn play_exact_number_game(bot: &Bot, chat_id: ChatId, guess: u8) -> ResponseResult<()> {
-        let dice_result = DiceGame::roll_dice();
-        let is_win = DiceGame::check_exact_number(dice_result, guess);
-        
-        let message = if is_win {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                guess,
-                DiceGame::win_message()
-            )
-        } else {
-            format!(
-                "🎲 Результат: {} {}\n\
-                 Вы выбрали: {}\n\n\
-                 {}",
-                dice_result,
-                DiceGame::dice_emoji(dice_result),
-                guess,
-                DiceGame::lose_message()
-            )
-        };
+        // Отправляем сообщение о выборе пользователя
+        bot.send_message(chat_id, format!("🎯 Вы выбрали число: {}\n🎲 Бросаю кубик...", guess))
+            .await?;
 
-        bot.send_message(chat_id, message).await?;
+        // Отправляем анимированный кубик
+        let dice_message = bot.send_dice(chat_id).await?;
+        
+        // Получаем результат кубика
+        if let Some(dice) = dice_message.dice() {
+            let dice_result = dice.value as u8;
+            let is_win = DiceGame::check_exact_number(dice_result, guess);
+            
+            // Даем время для анимации кубика
+            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            
+            let message = if is_win {
+                format!(
+                    "🎉 Выпало число: {}\nВы угадали!\n\n{}",
+                    dice_result,
+                    DiceGame::win_message()
+                )
+            } else {
+                format!(
+                    "😔 Выпало число: {}\nВы выбрали: {}\n\n{}",
+                    dice_result,
+                    guess,
+                    DiceGame::lose_message()
+                )
+            };
+
+            bot.send_message(chat_id, message).await?;
+        }
         
         // Предложение новой игры
         Self::offer_new_game(bot, chat_id).await

@@ -90,6 +90,8 @@ The bot supports three distinct game modes:
   - Added modular architecture with separate files for bot logic, game logic, and state management
   - Set up proper error handling and logging
   - Installed system dependencies (OpenSSL, pkg-config)
+  - **Updated to use real Telegram sendDice API** instead of local random generation
+  - Added animated dice functionality with proper timing and user feedback
 
 ## User Preferences
 
