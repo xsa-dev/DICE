@@ -1,5 +1,5 @@
 use rand::Rng;
-use crate::state::{EvenOddChoice, HighLowChoice};
+use crate::state::{EvenOddChoice, HighLowChoice, GuessOneChoice};
 
 /// Структура для управления игровой логикой
 pub struct DiceGame;
@@ -31,6 +31,15 @@ impl DiceGame {
     /// Проверка результата для игры "Точное число"
     pub fn check_exact_number(dice_result: u8, user_guess: u8) -> bool {
         dice_result == user_guess
+    }
+
+    /// Проверка результата для игры "Угадать единицу"
+    pub fn check_guess_one(dice_result: u8, user_choice: GuessOneChoice) -> bool {
+        let is_one = dice_result == 1;
+        match user_choice {
+            GuessOneChoice::Yes => is_one,
+            GuessOneChoice::No => !is_one,
+        }
     }
 
     /// Получение эмодзи кубика по числу

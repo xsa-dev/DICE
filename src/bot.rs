@@ -8,7 +8,7 @@ use teloxide::{
 use log::{info, error};
 
 use crate::game::DiceGame;
-use crate::state::{EvenOddChoice, HighLowChoice};
+use crate::state::{EvenOddChoice, HighLowChoice, GuessOneChoice};
 
 /// Команды бота
 #[derive(BotCommands, Clone)]
@@ -56,10 +56,11 @@ impl BotHandler {
         
         let text = "🎲 Привет! Добро пожаловать в игру с кубиками!\n\n\
                    Я предлагаю вам угадать результат броска кубика.\n\
-                   Доступны три варианта игры:\n\n\
+                   Доступны четыре варианта игры:\n\n\
                    🔵 Четное/Нечетное - угадайте четность числа\n\
                    🔴 Больше/Меньше 3.5 - угадайте диапазон\n\
-                   🎯 Точное число - угадайте конкретное число\n\n\
+                   🎯 Точное число - угадайте конкретное число\n\
+                   ⚀ Угадать единицу - выпадет ли единица\n\n\
                    Используйте /play чтобы начать игру!";
 
         bot.send_message(msg.chat.id, text)
@@ -82,7 +83,9 @@ impl BotHandler {
                    🔴 <b>Больше/Меньше 3.5</b>\n\
                    Угадайте, будет ли результат больше 3.5 (4-6) или меньше 3.5 (1-3)\n\n\
                    🎯 <b>Точное число</b>\n\
-                   Угадайте конкретное число от 1 до 6";
+                   Угадайте конкретное число от 1 до 6\n\n\
+                   ⚀ <b>Угадать единицу</b>\n\
+                   Угадайте, выпадет ли на кубике единица";
 
         bot.send_message(msg.chat.id, text)
             .parse_mode(ParseMode::Html)
@@ -103,6 +106,7 @@ impl BotHandler {
             vec![InlineKeyboardButton::callback("🔵 Четное/Нечетное", "game_even_odd")],
             vec![InlineKeyboardButton::callback("🔴 Больше/Меньше 3.5", "game_high_low")],
             vec![InlineKeyboardButton::callback("🎯 Точное число", "game_exact")],
+            vec![InlineKeyboardButton::callback("⚀ Угадать единицу", "game_guess_one")],
         ]);
 
         let text = "🎲 Выберите вариант игры:";
@@ -130,6 +134,9 @@ impl BotHandler {
                     "game_exact" => {
                         Self::start_exact_number_game(&bot, chat_id).await?;
                     }
+                    "game_guess_one" => {
+                        Self::start_guess_one_game(&bot, chat_id).await?;
+                    }
                     "choice_even" => {
                         Self::play_even_odd_game(&bot, chat_id, EvenOddChoice::Even).await?;
                     }
@@ -141,6 +148,12 @@ impl BotHandler {
                     }
                     "choice_low" => {
                         Self::play_high_low_game(&bot, chat_id, HighLowChoice::Low).await?;
+                    }
+                    "guess_one_yes" => {
+                        Self::play_guess_one_game(&bot, chat_id, GuessOneChoice::Yes).await?;
+                    }
+                    "guess_one_no" => {
+                        Self::play_guess_one_game(&bot, chat_id, GuessOneChoice::No).await?;
                     }
                     data if data.starts_with("number_") => {
                         if let Ok(number) = data[7..].parse::<u8>() {
@@ -218,6 +231,26 @@ impl BotHandler {
 
         let text = "🎯 <b>Игра: Точное число</b>\n\n\
                    Выберите число от 1 до 6, которое выпадет на кубике:";
+
+        bot.send_message(chat_id, text)
+            .parse_mode(ParseMode::Html)
+            .reply_markup(keyboard)
+            .await?;
+        
+        Ok(())
+    }
+
+    /// Начало игры "Угадать единицу"
+    async fn start_guess_one_game(bot: &Bot, chat_id: ChatId) -> ResponseResult<()> {
+        let keyboard = InlineKeyboardMarkup::new(vec![
+            vec![
+                InlineKeyboardButton::callback("✅ Да, выпадет единица", "guess_one_yes"),
+                InlineKeyboardButton::callback("❌ Нет, не выпадет", "guess_one_no"),
+            ],
+        ]);
+
+        let text = "⚀ <b>Игра: Угадать единицу</b>\n\n\
+                   Выпадет ли на кубике единица?";
 
         bot.send_message(chat_id, text)
             .parse_mode(ParseMode::Html)
@@ -347,6 +380,52 @@ impl BotHandler {
                     "😔 Выпало число: {}\nВы выбрали: {}\n\n{}",
                     dice_result,
                     guess,
+                    DiceGame::lose_message()
+                )
+            };
+
+            bot.send_message(chat_id, message).await?;
+        }
+        
+        // Предложение новой игры
+        Self::offer_new_game(bot, chat_id).await
+    }
+
+    /// Игра "Угадать единицу"
+    async fn play_guess_one_game(bot: &Bot, chat_id: ChatId, choice: GuessOneChoice) -> ResponseResult<()> {
+        let choice_text = match choice {
+            GuessOneChoice::Yes => "да, выпадет единица",
+            GuessOneChoice::No => "нет, не выпадет единица",
+        };
+
+        // Отправляем сообщение о выборе пользователя
+        bot.send_message(chat_id, format!("⚀ Вы выбрали: {}\n🎲 Бросаю кубик...", choice_text))
+            .await?;
+
+        // Отправляем анимированный кубик
+        let dice_message = bot.send_dice(chat_id).await?;
+        
+        // Получаем результат кубика
+        if let Some(dice) = dice_message.dice() {
+            let dice_result = dice.value as u8;
+            let is_win = DiceGame::check_guess_one(dice_result, choice.clone());
+            let result_text = if dice_result == 1 { "выпала единица" } else { "единица не выпала" };
+            
+            // Даем время для анимации кубика
+            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            
+            let message = if is_win {
+                format!(
+                    "🎉 Число {}: {}\n\n{}",
+                    dice_result,
+                    result_text,
+                    DiceGame::win_message()
+                )
+            } else {
+                format!(
+                    "😔 Число {}: {}\n\n{}",
+                    dice_result,
+                    result_text,
                     DiceGame::lose_message()
                 )
             };

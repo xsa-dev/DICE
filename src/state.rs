@@ -29,6 +29,7 @@ pub enum GameType {
     EvenOdd,    // Четное/Нечетное
     HighLow,    // Больше/Меньше 3.5
     ExactNumber, // Точное число
+    GuessOne,   // Угадать единицу
 }
 
 /// Выбор пользователя в игре "Четное/Нечетное"
@@ -43,4 +44,11 @@ pub enum EvenOddChoice {
 pub enum HighLowChoice {
     High,  // Больше 3.5 (4-6)
     Low,   // Меньше 3.5 (1-3)
+}
+
+/// Выбор пользователя в игре "Угадать единицу"
+#[derive(Clone, Debug, PartialEq)]
+pub enum GuessOneChoice {
+    Yes,   // Выпадет единица
+    No,    // Не выпадет единица
 }

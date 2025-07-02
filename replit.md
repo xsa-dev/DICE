@@ -49,11 +49,12 @@ The system follows a modular design with clear separation of concerns:
 
 ## Game Modes
 
-The bot supports three distinct game modes:
+The bot supports four distinct game modes:
 
 1. **Even/Odd Game**: Users guess whether the dice result will be even or odd
 2. **High/Low Game**: Users guess whether the result will be higher than 3.5 (4-6) or lower (1-3)
 3. **Exact Number Game**: Users guess the exact number that will appear (1-6)
+4. **Guess One Game**: Users guess whether the dice will show exactly one
 
 ## Data Flow
 
@@ -118,6 +119,16 @@ The bot supports three distinct game modes:
     - ✅ Additional health check endpoint at "/health" returning 200 status
     - ✅ Concurrent execution of Telegram bot and HTTP server
 
+- July 02, 2025: Added new game mode "Guess One"
+  - **Added fourth game mode**: "Угадать единицу" - players guess if dice will show exactly one
+  - **Updated state management** with GuessOneChoice enum (Yes/No options)
+  - **Enhanced game logic** with check_guess_one function in DiceGame
+  - **Updated user interface** with new inline keyboard button "⚀ Угадать единицу"
+  - **Added callback handlers** for "guess_one_yes" and "guess_one_no" interactions
+  - **Implemented complete game flow** with start_guess_one_game and play_guess_one_game functions
+  - **Updated help and start messages** to include information about the fourth game mode
+  - **Maintained consistent game experience** with same animations and messaging patterns
+
 ## User Preferences
 
 - Language: Russian for bot messages and user interaction
@@ -126,4 +137,4 @@ The bot supports three distinct game modes:
 
 ---
 
-**Current Status**: Telegram dice bot fully implemented in Rust. All core functionality is complete including interactive keyboard buttons, game logic, and proper state management. Bot requires BOT_TOKEN environment variable to connect to Telegram API.
+**Current Status**: Telegram dice bot fully implemented in Rust with four game modes. All core functionality is complete including interactive keyboard buttons, game logic, proper state management, and the new "Guess One" game mode. Bot requires BOT_TOKEN environment variable to connect to Telegram API.
