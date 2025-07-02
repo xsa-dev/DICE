@@ -23,3 +23,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cargo run"
+
+[deployment]
+deploymentTarget = "cloudrun"
