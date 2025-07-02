@@ -8,7 +8,8 @@ This is a Telegram bot written in Rust using the teloxide library for playing a 
 
 ### Technology Stack
 - **Backend**: Rust
-- **Framework**: teloxide (Telegram bot framework)
+- **Framework**: teloxide (Telegram bot framework with webhooks)
+- **HTTP Server**: axum (for webhook and health check endpoints)
 - **Dependencies**: tokio (async runtime), rand (random number generation), serde (serialization)
 - **System Dependencies**: OpenSSL, pkg-config
 
@@ -40,9 +41,11 @@ The system follows a modular design with clear separation of concerns:
 - State transitions
 
 ### Main Application (src/main.rs)
-- Bot initialization
-- Environment variable handling
-- Dispatcher setup and execution
+- Bot initialization with webhook support
+- HTTP server setup with axum
+- Health check endpoint implementation
+- Environment variable handling (BOT_TOKEN, PORT)
+- Dispatcher setup and execution with webhook listener
 
 ## Game Modes
 
@@ -92,6 +95,14 @@ The bot supports three distinct game modes:
   - Installed system dependencies (OpenSSL, pkg-config)
   - **Updated to use real Telegram sendDice API** instead of local random generation
   - Added animated dice functionality with proper timing and user feedback
+
+- July 02, 2025: Autoscale deployment compatibility fixes
+  - **Added HTTP server with axum** for health check endpoints
+  - **Implemented concurrent execution** of Telegram bot and HTTP server
+  - **Added health check endpoints** at "/" and "/health" routes
+  - **Enhanced environment variable handling** for PORT configuration
+  - **Updated dependencies** with axum and url crates
+  - **Modified main.rs** to support dual-service architecture for Replit Autoscale deployment
 
 ## User Preferences
 
