@@ -27,6 +27,8 @@ waitForPort = 5000
 
 [deployment]
 deploymentTarget = "cloudrun"
+build = ["sh", "-c", "cargo build"]
+run = ["sh", "-c", "cargo run"]
 
 [[ports]]
 localPort = 5000
