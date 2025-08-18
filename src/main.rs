@@ -1,9 +1,4 @@
-use axum::{
-    http::StatusCode,
-    response::Html,
-    routing::get,
-    Router,
-};
+use axum::{http::StatusCode, response::Html, routing::get, Router};
 use log::{error, info};
 use std::net::SocketAddr;
 use teloxide::prelude::*;
