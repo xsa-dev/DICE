@@ -1,5 +1,5 @@
-use rand::Rng;
 use crate::state::{EvenOddChoice, HighLowChoice, GuessOneChoice};
+use rand::Rng;
 
 /// Структура для управления игровой логикой
 pub struct DiceGame;

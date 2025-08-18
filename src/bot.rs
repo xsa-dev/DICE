@@ -5,7 +5,7 @@ use teloxide::{
     dispatching::UpdateHandler,
     RequestError,
 };
-use log::{info, error};
+use log::{error, info};
 
 use crate::game::DiceGame;
 use crate::state::{EvenOddChoice, HighLowChoice, GuessOneChoice};

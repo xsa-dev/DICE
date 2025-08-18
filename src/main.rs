@@ -1,12 +1,12 @@
-use teloxide::prelude::*;
-use log::{info, error};
 use axum::{
     http::StatusCode,
     response::Html,
     routing::get,
     Router,
 };
+use log::{error, info};
 use std::net::SocketAddr;
+use teloxide::prelude::*;
 
 mod bot;
 mod game;
